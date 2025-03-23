@@ -113,11 +113,10 @@ export default function VoidfulMaterials() {
       const containerWidth = sketchRef.current?.clientWidth || window.innerWidth;
       const baseWidth = 1080;
       const baseHeight = 720;
-
       
       const aspectRatio = baseWidth / baseHeight;
-      let newWidth = Math.min(containerWidth, baseWidth);
-      let newHeight = newWidth / aspectRatio;
+      const newWidth = Math.min(containerWidth, baseWidth);
+      const newHeight = newWidth / aspectRatio;
       setDimensions({ width: newWidth, height: newHeight });
     };
     handleResize();
@@ -137,30 +136,34 @@ export default function VoidfulMaterials() {
   // Background video playback logic
   useEffect(() => {
     if (videoRef1.current && videoRef2.current) {
+      // Store refs in variables to avoid cleanup issues
+      const video1 = videoRef1.current;
+      const video2 = videoRef2.current;
+      
       const handleVideo1End = () => {
-        videoRef1.current.style.display = "none";
-        videoRef2.current.style.display = "block";
-        videoRef2.current.play();
+        video1.style.display = "none";
+        video2.style.display = "block";
+        video2.play();
         setActiveVideo(2);
       };
       const handleVideo2End = () => {
-        videoRef2.current.style.display = "none";
-        videoRef1.current.style.display = "block";
-        videoRef1.current.play();
+        video2.style.display = "none";
+        video1.style.display = "block";
+        video1.play();
         setActiveVideo(1);
       };
-      videoRef1.current.addEventListener("ended", handleVideo1End);
-      videoRef2.current.addEventListener("ended", handleVideo2End);
+      video1.addEventListener("ended", handleVideo1End);
+      video2.addEventListener("ended", handleVideo2End);
       if (activeVideo === 1) {
-        videoRef1.current.style.display = "block";
-        videoRef2.current.style.display = "none";
+        video1.style.display = "block";
+        video2.style.display = "none";
       } else {
-        videoRef1.current.style.display = "none";
-        videoRef2.current.style.display = "block";
+        video1.style.display = "none";
+        video2.style.display = "block";
       }
       return () => {
-        videoRef1.current?.removeEventListener("ended", handleVideo1End);
-        videoRef2.current?.removeEventListener("ended", handleVideo2End);
+        video1.removeEventListener("ended", handleVideo1End);
+        video2.removeEventListener("ended", handleVideo2End);
       };
     }
   }, [activeVideo]);
@@ -225,13 +228,29 @@ export default function VoidfulMaterials() {
 
   // Initialize top and bottom noise cubes
   useEffect(() => {
-    const p5NoiseCubesTop = createNoiseSketch(noiseCubesRef, p5TopInstanceRef);
-    return () => p5TopInstanceRef.current?.remove();
+    // Store the instance but avoid the unused variable warning
+    createNoiseSketch(noiseCubesRef, p5TopInstanceRef);
+    
+    // Store ref in variable to avoid cleanup issues
+    const topInstanceRef = p5TopInstanceRef.current;
+    return () => {
+      if (topInstanceRef) {
+        topInstanceRef.remove();
+      }
+    };
   }, []);
 
   useEffect(() => {
-    const p5NoiseCubesBottom = createNoiseSketch(noiseCubesBottomRef, p5BottomInstanceRef);
-    return () => p5BottomInstanceRef.current?.remove();
+    // Store the instance but avoid the unused variable warning
+    createNoiseSketch(noiseCubesBottomRef, p5BottomInstanceRef);
+    
+    // Store ref in variable to avoid cleanup issues
+    const bottomInstanceRef = p5BottomInstanceRef.current;
+    return () => {
+      if (bottomInstanceRef) {
+        bottomInstanceRef.remove();
+      }
+    };
   }, []);
 
   // Neural network visualization using p5.js
@@ -256,11 +275,11 @@ export default function VoidfulMaterials() {
       const resetSketch = () => {
         layers = [];
         for (let i = 0; i < neuronsPerLayer.length; i++) {
-          let numNeurons = neuronsPerLayer[i];
-          let layer = [];
-          let x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
+          const numNeurons = neuronsPerLayer[i];
+          const layer = [];
+          const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
           for (let j = 0; j < numNeurons; j++) {
-            let y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
+            const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
             layer.push(p.createVector(x, y));
           }
           layers.push(layer);
@@ -269,9 +288,9 @@ export default function VoidfulMaterials() {
         for (let i = 0; i < layers.length - 1; i++) {
           for (let j = 0; j < layers[i].length; j++) {
             for (let k = 0; k < layers[i + 1].length; k++) {
-              let start = layers[i][j];
-              let end = layers[i + 1][k];
-              let offset = p.random(p.TWO_PI);
+              const start = layers[i][j];
+              const end = layers[i + 1][k];
+              const offset = p.random(p.TWO_PI);
               connections.push({ start, end, offset });
             }
           }
@@ -283,21 +302,21 @@ export default function VoidfulMaterials() {
         p.stroke(150, 150, 150, 100);
         p.strokeWeight(1);
         // Draw connections (lines between neurons)
-        for (let conn of connections) {
+        for (const conn of connections) {
           p.line(conn.start.x, conn.start.y, conn.end.x, conn.end.y);
         }
         p.noStroke();
         p.fill(11, 200, 37); // Green for connection dots
-        let speed = p.TWO_PI / 300;
-        for (let conn of connections) {
-          let t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
-          let x = p.lerp(conn.start.x, conn.end.x, t);
-          let y = p.lerp(conn.start.y, conn.end.y, t);
+        const speed = p.TWO_PI / 300;
+        for (const conn of connections) {
+          const t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
+          const x = p.lerp(conn.start.x, conn.end.x, t);
+          const y = p.lerp(conn.start.y, conn.end.y, t);
           p.ellipse(x, y, 4, 4);
         }
         p.textSize(14); // Set text size to 14 pixels
         for (let i = 0; i < layers.length; i++) {
-          let layer = layers[i];
+          const layer = layers[i];
           p.noStroke();
           p.fill(255); // White for layer labels
           p.textAlign(p.CENTER, p.BOTTOM);
@@ -308,7 +327,7 @@ export default function VoidfulMaterials() {
             p.text("Output", layer[0].x, 50);
           }
           for (let j = 0; j < layer.length; j++) {
-            let pos = layer[j];
+            const pos = layer[j];
             p.fill(85, 0, 255); // Purple for neuron circles
             p.stroke(255);
             p.ellipse(pos.x, pos.y, 27, 27); // Draw neuron
