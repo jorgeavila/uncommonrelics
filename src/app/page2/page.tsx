@@ -113,6 +113,8 @@ export default function VoidfulMaterials() {
       const containerWidth = sketchRef.current?.clientWidth || window.innerWidth;
       const baseWidth = 1080;
       const baseHeight = 720;
+
+      
       const aspectRatio = baseWidth / baseHeight;
       let newWidth = Math.min(containerWidth, baseWidth);
       let newHeight = newWidth / aspectRatio;
