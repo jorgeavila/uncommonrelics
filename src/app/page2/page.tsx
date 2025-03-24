@@ -37,7 +37,7 @@ export default function Page2() {
       description:
         "Geometric anomalies emerge from electromagnetic field disturbances.",
       subtext: "⊆⊂⊚⊃⊇",
-      videoSrc: "/Relic3.mp4",
+      videoSrc: "/relic3.mp4",
       artifactVideoSrc: "/artifact2.mp4",
       status: "AVAILABLE",
     },
