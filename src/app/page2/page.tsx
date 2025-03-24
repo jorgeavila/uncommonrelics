@@ -5,21 +5,18 @@ import p5 from "p5";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function VoidfulMaterials() {
-  // Refs for p5.js sketches and videos
-  const sketchRef = useRef();
-  const noiseCubesRef = useRef();
-  const noiseCubesBottomRef = useRef();
-  const videoRef1 = useRef(null);
-  const videoRef2 = useRef(null);
-  const artifactVideoRef = useRef(null);
-  const productVideoRef = useRef(null);
-  const p5TopInstanceRef = useRef(null);
-  const p5BottomInstanceRef = useRef(null);
+  // Refs for p5.js sketches and videos - with proper typing
+  const sketchRef = useRef<HTMLDivElement>(null);
+  const noiseCubesRef = useRef<HTMLDivElement>(null);
+  const noiseCubesBottomRef = useRef<HTMLDivElement>(null);
+  const videoRef1 = useRef<HTMLVideoElement>(null);
+  const videoRef2 = useRef<HTMLVideoElement>(null);
+  const artifactVideoRef = useRef<HTMLVideoElement>(null);
+  const productVideoRef = useRef<HTMLVideoElement>(null);
+  const p5TopInstanceRef = useRef<p5 | null>(null);
+  const p5BottomInstanceRef = useRef<p5 | null>(null);
 
   // State for dimensions, video playback, and glitch effects
-
-
-  
   const [dimensions, setDimensions] = useState({ width: 1080, height: 720 });
   const [activeVideo, setActiveVideo] = useState(1);
   const [globalGlitch, setGlobalGlitch] = useState(false);
@@ -61,7 +58,7 @@ export default function VoidfulMaterials() {
   ];
 
   // AnimatedText sub-component for dynamic text effects
-  const AnimatedText = ({ text }) => {
+  const AnimatedText = ({ text }: { text: string }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isResetting, setIsResetting] = useState(false);
 
@@ -146,13 +143,13 @@ export default function VoidfulMaterials() {
       const handleVideo1End = () => {
         video1.style.display = "none";
         video2.style.display = "block";
-        video2.play();
+        video2.play().catch(err => console.error("Video playback error:", err));
         setActiveVideo(2);
       };
       const handleVideo2End = () => {
         video2.style.display = "none";
         video1.style.display = "block";
-        video1.play();
+        video1.play().catch(err => console.error("Video playback error:", err));
         setActiveVideo(1);
       };
       video1.addEventListener("ended", handleVideo1End);
@@ -172,10 +169,14 @@ export default function VoidfulMaterials() {
   }, [activeVideo]);
 
   // Noise cubes sketch using p5.js
-  const createNoiseSketch = (ref, instanceRef) => {
+  // Fixed function signature to accept non-null ref
+  const createNoiseSketch = (
+    ref: React.RefObject<HTMLDivElement>,
+    instanceRef: React.MutableRefObject<p5 | null>
+  ): p5 | null => {
     if (!ref.current || instanceRef.current) return instanceRef.current;
 
-    const noiseSketch = (p) => {
+    const noiseSketch = (p: p5) => {
       const cubes = [
         { x: 0, y: 0, seed: p.random(1000), speed: 0.02, scale: 0.03 },
         { x: 0, y: 0, seed: p.random(1000), speed: 0.015, scale: 0.025 },
@@ -231,8 +232,10 @@ export default function VoidfulMaterials() {
 
   // Initialize top and bottom noise cubes
   useEffect(() => {
-    // Store the instance but avoid the unused variable warning
-    createNoiseSketch(noiseCubesRef, p5TopInstanceRef);
+    // Only call createNoiseSketch if the ref is not null
+    if (noiseCubesRef.current) {
+      createNoiseSketch(noiseCubesRef, p5TopInstanceRef);
+    }
     
     // Store ref in variable to avoid cleanup issues
     const topInstanceRef = p5TopInstanceRef.current;
@@ -244,8 +247,10 @@ export default function VoidfulMaterials() {
   }, []);
 
   useEffect(() => {
-    // Store the instance but avoid the unused variable warning
-    createNoiseSketch(noiseCubesBottomRef, p5BottomInstanceRef);
+    // Only call createNoiseSketch if the ref is not null
+    if (noiseCubesBottomRef.current) {
+      createNoiseSketch(noiseCubesBottomRef, p5BottomInstanceRef);
+    }
     
     // Store ref in variable to avoid cleanup issues
     const bottomInstanceRef = p5BottomInstanceRef.current;
@@ -260,9 +265,14 @@ export default function VoidfulMaterials() {
   useEffect(() => {
     if (!sketchRef.current) return;
 
-    const sketch = (p) => {
-      let layers = [];
-      let connections = [];
+    const sketch = (p: p5) => {
+      let layers: p5.Vector[][] = [];
+      interface Connection {
+        start: p5.Vector;
+        end: p5.Vector;
+        offset: number;
+      }
+      let connections: Connection[] = [];
       const neuronsPerLayer = [5, 5, 5, 5];
       const inputLabels = ["Light", "EMF", "Heat", "Camera", "Geiger"];
       const hiddenLayer1Labels = ["Infrared Light 1", "Infrared Light 2", "Laser 1", "Laser 2", "Optic fiber"];
@@ -279,7 +289,7 @@ export default function VoidfulMaterials() {
         layers = [];
         for (let i = 0; i < neuronsPerLayer.length; i++) {
           const numNeurons = neuronsPerLayer[i];
-          const layer = [];
+          const layer: p5.Vector[] = [];
           const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
           for (let j = 0; j < numNeurons; j++) {
             const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
