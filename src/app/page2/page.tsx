@@ -17,6 +17,9 @@ export default function VoidfulMaterials() {
   const p5BottomInstanceRef = useRef(null);
 
   // State for dimensions, video playback, and glitch effects
+
+
+  
   const [dimensions, setDimensions] = useState({ width: 1080, height: 720 });
   const [activeVideo, setActiveVideo] = useState(1);
   const [globalGlitch, setGlobalGlitch] = useState(false);
