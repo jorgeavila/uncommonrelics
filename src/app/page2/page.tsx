@@ -2,11 +2,152 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import type P5 from "p5";
+
+function P5Network() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const p5InstanceRef = useRef<P5 | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && containerRef.current) {
+      import("p5").then((module) => {
+        const p5 = module.default;
+        const sketch = (p: P5) => {
+          const neuronsPerLayer: number[] = [5, 5, 5, 5];
+          const inputLabels: string[] = ["Light", "Emf", "Heat", "Camera", "Geiger"];
+          const hiddenLayer1Labels: string[] = [
+            "Infrared Light 1",
+            "Infrared Light 2",
+            "Laser 1",
+            "Laser 2",
+            "Optic fiber",
+          ];
+          const hiddenLayer2Labels: string[] = [
+            "Voidful Energy 1",
+            "Voidful Energy 2",
+            "Voidful Energy 3",
+            "Voidful Energy 4",
+            "Voidful Energy 5",
+          ];
+          const outputLabels: string[] = [
+            "Relic 1",
+            "Relic 2",
+            "Relic 3",
+            "Relic 4",
+            "Relic 5",
+          ];
+          const layerLabels: string[] = ["Input Layers", "Hidden Layer 1", "Hidden Layer 2"];
+
+          let layers: P5.Vector[][] = [];
+          let connections: { start: P5.Vector; end: P5.Vector; offset: number }[] = [];
+
+          p.setup = () => {
+            p.createCanvas(800, 600);
+            p.frameRate(60);
+
+            layers = [];
+            for (let i = 0; i < neuronsPerLayer.length; i++) {
+              const numNeurons = neuronsPerLayer[i];
+              const layer: P5.Vector[] = [];
+              const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
+              for (let j = 0; j < numNeurons; j++) {
+                const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
+                layer.push(p.createVector(x, y));
+              }
+              layers.push(layer);
+            }
+
+            connections = [];
+            for (let i = 0; i < layers.length - 1; i++) {
+              for (let j = 0; j < layers[i].length; j++) {
+                for (let k = 0; k < layers[i + 1].length; k++) {
+                  const start = layers[i][j];
+                  const end = layers[i + 1][k];
+                  const offset = p.random(p.TWO_PI);
+                  connections.push({ start, end, offset });
+                }
+              }
+            }
+          };
+
+          p.draw = () => {
+            p.background(0);
+
+            p.stroke(200, 200, 200, 100);
+            p.strokeWeight(1);
+            for (const conn of connections) {
+              p.line(conn.start.x, conn.start.y, conn.end.x, conn.end.y);
+            }
+
+            p.noStroke();
+            p.fill(11, 255, 37);
+            const speed = p.TWO_PI / 300;
+            for (const conn of connections) {
+              const t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
+              const x = p.lerp(conn.start.x, conn.end.x, t);
+              const y = p.lerp(conn.start.y, conn.end.y, t);
+              p.ellipse(x, y, 4, 4);
+            }
+
+            p.textSize(16);
+            for (let i = 0; i < layers.length; i++) {
+              const layer = layers[i];
+              p.noStroke();
+              p.fill(255);
+              p.textAlign(p.CENTER, p.BOTTOM);
+              if (i < layerLabels.length) {
+                p.text(layerLabels[i], layer[0].x, 50);
+              } else {
+                p.text("Output", layer[0].x, 50);
+              }
+
+              for (let j = 0; j < layer.length; j++) {
+                const pos = layer[j];
+                p.fill(85, 0, 255);
+                p.stroke(255);
+                p.ellipse(pos.x, pos.y, 30, 30);
+
+                p.noStroke();
+                p.fill(255);
+                p.textAlign(p.CENTER, p.CENTER);
+                if (i === 0 && j < inputLabels.length) {
+                  p.text(inputLabels[j], pos.x, pos.y - 25);
+                } else if (i === 1 && j < hiddenLayer1Labels.length) {
+                  p.text(hiddenLayer1Labels[j], pos.x, pos.y - 25);
+                } else if (i === 2 && j < hiddenLayer2Labels.length) {
+                  p.text(hiddenLayer2Labels[j], pos.x, pos.y - 25);
+                } else if (i === 3 && j < outputLabels.length) {
+                  p.text(outputLabels[j], pos.x, pos.y - 25);
+                }
+              }
+            }
+          };
+        };
+
+        if (p5InstanceRef.current) {
+          p5InstanceRef.current.remove();
+        }
+        p5InstanceRef.current = new p5(sketch, containerRef.current!);
+
+        return () => {
+          if (p5InstanceRef.current) {
+            p5InstanceRef.current.remove();
+            p5InstanceRef.current = null;
+          }
+        };
+      });
+    }
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ width: "100%", maxWidth: "800px", height: "600px" }}
+    />
+  );
+}
 
 export default function Page2() {
-  //
-  // 1) Código de la página (productos, videos, etc.)
-  //
   const videoRef1 = useRef<HTMLVideoElement>(null);
   const videoRef2 = useRef<HTMLVideoElement>(null);
   const artifactVideoRef = useRef<HTMLVideoElement>(null);
@@ -45,7 +186,8 @@ export default function Page2() {
       id: 2,
       title: "Relic III",
       heading: "Voidful Materials - Relics III",
-      description: "The final piece in our dystopian material science trilogy.",
+      description:
+        "The final piece in our dystopian material science trilogy.",
       subtext:
         "Quantum entanglement visualized through reactive crystalline structures.",
       videoSrc: "/Relic3.mp4",
@@ -176,9 +318,6 @@ export default function Page2() {
     }, 1000);
   };
 
-  //
-  // 2) Render con el iframe p5.js embebido debajo de productos
-  //
   return (
     <main
       className={`relative w-full min-h-screen overflow-hidden bg-black text-white font-sans ${
@@ -385,21 +524,14 @@ export default function Page2() {
         </div>
 
         <section className="my-0 flex justify-center">
-        <iframe
-          src="https://editor.p5js.org/EGROJJJ/full/9K3jB2ccV"
-          style={{
-            width: "100%",
-            maxWidth: "800px",
-            height: "600px",
-            border: "none",
-          }}
-          allowFullScreen
-        />
+          <div
+            className="w-full"
+            style={{ maxWidth: "800px", height: "600px" }}
+          >
+            <P5Network />
+          </div>
+        </section>
       </section>
-      </section>
-
-      {/* Sección donde incrustamos el p5.js (iframe) debajo de los productos */}
-     
 
       <section className="relative flex items-center justify-center h-screen">
         <div className="w-[60vmin] md:w-[80vmin] h-[60vmin] md:h-[80vmin] rounded-full bg-[conic-gradient(from_180deg_at_50%_50%,#ff0000,#ff7f00,#ff0000)] opacity-20 blur-3xl"></div>
