@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import p5 from "p5";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -183,7 +183,7 @@ export default function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, []);
+    }, []); // Empty dependency array since we only want to create the instance once
 
     useEffect(() => {
       if (p5InstanceRef.current) {
@@ -222,40 +222,48 @@ export default function VoidfulMaterials() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Create stable callbacks for video handlers
+  const handleVideo1End = useCallback(() => {
+    if (videoRef1.current && videoRef2.current) {
+      videoRef1.current.style.display = "none";
+      videoRef2.current.style.display = "block";
+      videoRef2.current.play();
+      setActiveVideo(2);
+    }
+  }, []);
+
+  const handleVideo2End = useCallback(() => {
+    if (videoRef2.current && videoRef1.current) {
+      videoRef2.current.style.display = "none";
+      videoRef1.current.style.display = "block";
+      videoRef1.current.play();
+      setActiveVideo(1);
+    }
+  }, []);
+
   // **Background Video Playback**: Alternates between two videos
   useEffect(() => {
-    if (videoRef1.current && videoRef2.current) {
-      const handleVideo1End = () => {
-        videoRef1.current.style.display = "none";
-        videoRef2.current.style.display = "block";
-        videoRef2.current.play();
-        setActiveVideo(2);
-      };
-
-      const handleVideo2End = () => {
-        videoRef2.current.style.display = "none";
-        videoRef1.current.style.display = "block";
-        videoRef1.current.play();
-        setActiveVideo(1);
-      };
-
-      videoRef1.current.addEventListener("ended", handleVideo1End);
-      videoRef2.current.addEventListener("ended", handleVideo2End);
+    const video1 = videoRef1.current;
+    const video2 = videoRef2.current;
+    
+    if (video1 && video2) {
+      video1.addEventListener("ended", handleVideo1End);
+      video2.addEventListener("ended", handleVideo2End);
 
       if (activeVideo === 1) {
-        videoRef1.current.style.display = "block";
-        videoRef2.current.style.display = "none";
+        video1.style.display = "block";
+        video2.style.display = "none";
       } else {
-        videoRef1.current.style.display = "none";
-        videoRef2.current.style.display = "block";
+        video1.style.display = "none";
+        video2.style.display = "block";
       }
 
       return () => {
-        videoRef1.current?.removeEventListener("ended", handleVideo1End);
-        videoRef2.current?.removeEventListener("ended", handleVideo2End);
+        video1.removeEventListener("ended", handleVideo1End);
+        video2.removeEventListener("ended", handleVideo2End);
       };
     }
-  }, [activeVideo]);
+  }, [activeVideo, handleVideo1End, handleVideo2End]);
 
   // **Neural Network Visualization**: p5.js sketch
   useEffect(() => {
@@ -376,15 +384,15 @@ export default function VoidfulMaterials() {
   }, [dimensions]);
 
   // **Product Navigation Functions**
-  const nextProduct = () => {
+  const nextProduct = useCallback(() => {
     setIsGlitching(true);
     setTimeout(() => {
       setCurrentProduct((prev) => (prev + 1) % products.length);
       setIsGlitching(false);
     }, 1000);
-  };
+  }, [products.length]);
 
-  const prevProduct = () => {
+  const prevProduct = useCallback(() => {
     setIsGlitching(true);
     setTimeout(() => {
       setCurrentProduct((prev) =>
@@ -392,7 +400,7 @@ export default function VoidfulMaterials() {
       );
       setIsGlitching(false);
     }, 1000);
-  };
+  }, [products.length]);
 
   return (
     <main
@@ -410,7 +418,7 @@ export default function VoidfulMaterials() {
             <AnimatedText text="UNCOMMON" />
           </span>
           <div className="w-10 h-10 md:w-12 md:h-12 border border-white-500 rounded-full flex items-center justify-center text-xs md:text-sm text-red-100">
-            UA
+            NA
           </div>
           <span className="cursor-pointer hover:opacity-80 text-sm md:text-base">
             <AnimatedText text="ARTIFACTS" />
