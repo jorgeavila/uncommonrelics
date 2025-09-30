@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import p5 from "p5";
-import type p5Types from "p5";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Dynamically import p5 with no SSR
+const p5 = dynamic(() => import("p5"), { ssr: false });
+
+// Type import for p5
+import type p5Types from "p5";
 
 // **AnimatedText Component**: Progressively colors text letters red
 const AnimatedText = ({ text }: { text: string }) => {
@@ -63,7 +68,7 @@ const VHSOverlay = () => {
 };
 
 // **Main Component**: VoidfulMaterials with NoiseCubes integrated
-export default function VoidfulMaterials() {
+function VoidfulMaterials() {
   const sketchRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1080, height: 720 });
   const videoRef1 = useRef<HTMLVideoElement>(null);
@@ -73,6 +78,7 @@ export default function VoidfulMaterials() {
   const [currentProduct, setCurrentProduct] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
   const productVideoRef = useRef<HTMLVideoElement>(null);
+  const [p5Loaded, setP5Loaded] = useState(false);
 
   const products = [
     {
@@ -110,73 +116,87 @@ export default function VoidfulMaterials() {
     },
   ];
 
+  // Check if we're in the browser
+  useEffect(() => {
+    setP5Loaded(true);
+  }, []);
+
   // **NoiseCubes Component**: Integrated directly here
   const NoiseCubes = ({ isGlitching, className }: { isGlitching: boolean; className: string }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const p5InstanceRef = useRef<p5Types | null>(null);
 
     useEffect(() => {
+      if (!p5Loaded || typeof window === "undefined") return;
+
       if (containerRef.current && !p5InstanceRef.current) {
-        const noiseSketch = (p: p5Types) => {
-          const cubes = [
-            { x: 0, y: 0, seed: p.random(1000), speed: 0.02, scale: 0.03 },
-            { x: 0, y: 0, seed: p.random(1000), speed: 0.015, scale: 0.025 },
-            { x: 0, y: 0, seed: p.random(1000), speed: 0.025, scale: 0.035 },
-          ];
-          const size = 64;
-          const spacing = 12;
-          let flickerIntensity = 0;
+        // Dynamic import to ensure p5 is loaded
+        import("p5").then((p5Module) => {
+          const P5 = p5Module.default;
+          
+          const noiseSketch = (p: p5Types) => {
+            const cubes = [
+              { x: 0, y: 0, seed: p.random(1000), speed: 0.02, scale: 0.03 },
+              { x: 0, y: 0, seed: p.random(1000), speed: 0.015, scale: 0.025 },
+              { x: 0, y: 0, seed: p.random(1000), speed: 0.025, scale: 0.035 },
+            ];
+            const size = 64;
+            const spacing = 12;
+            let flickerIntensity = 0;
 
-          p.setup = () => {
-            p.createCanvas(3 * size + 2 * spacing, size);
-            p.noStroke();
-            p.pixelDensity(1);
-            (p as p5Types & { isGlitching: boolean }).isGlitching = isGlitching;
-          };
+            p.setup = () => {
+              p.createCanvas(3 * size + 2 * spacing, size);
+              p.noStroke();
+              p.pixelDensity(1);
+              (p as p5Types & { isGlitching: boolean }).isGlitching = isGlitching;
+            };
 
-          p.draw = () => {
-            p.background(0);
-            flickerIntensity = p.lerp(
-              flickerIntensity,
-              p.noise(p.frameCount * 0.01) * 0.5 + 0.5,
-              0.05
-            );
+            p.draw = () => {
+              p.background(0);
+              flickerIntensity = p.lerp(
+                flickerIntensity,
+                p.noise(p.frameCount * 0.01) * 0.5 + 0.5,
+                0.05
+              );
 
-            for (let i = 0; i < cubes.length; i++) {
-              const cube = cubes[i];
-              const cubeX = i * (size + spacing);
-              cube.x += Math.sin(p.frameCount * 0.01 + cube.seed) * 0.2;
-              cube.y += Math.cos(p.frameCount * 0.015 + cube.seed * 0.5) * 0.2;
+              for (let i = 0; i < cubes.length; i++) {
+                const cube = cubes[i];
+                const cubeX = i * (size + spacing);
+                cube.x += Math.sin(p.frameCount * 0.01 + cube.seed) * 0.2;
+                cube.y += Math.cos(p.frameCount * 0.015 + cube.seed * 0.5) * 0.2;
 
-              const buffer = p.createGraphics(size, size);
-              buffer.pixelDensity(1);
-              buffer.loadPixels();
+                const buffer = p.createGraphics(size, size);
+                buffer.pixelDensity(1);
+                buffer.loadPixels();
 
-              for (let x = 0; x < size; x++) {
-                for (let y = 0; y < size; y++) {
-                  const noiseVal = p.noise(
-                    (x + cube.x) * cube.scale,
-                    (y + cube.y) * cube.scale,
-                    cube.seed + p.frameCount * cube.speed
-                  );
-                  const flickerVal = noiseVal * (0.7 + flickerIntensity * 0.3);
-                  const baseVal = p.map(flickerVal, 0, 1, 0, 255);
-                  const isGlitchingNow = (p as p5Types & { isGlitching: boolean }).isGlitching;
-                  const val = isGlitchingNow ? 255 - baseVal : baseVal;
-                  const index = 4 * (y * size + x);
-                  buffer.pixels[index] = val;
-                  buffer.pixels[index + 1] = val;
-                  buffer.pixels[index + 2] = val;
-                  buffer.pixels[index + 3] = 255;
+                for (let x = 0; x < size; x++) {
+                  for (let y = 0; y < size; y++) {
+                    const noiseVal = p.noise(
+                      (x + cube.x) * cube.scale,
+                      (y + cube.y) * cube.scale,
+                      cube.seed + p.frameCount * cube.speed
+                    );
+                    const flickerVal = noiseVal * (0.7 + flickerIntensity * 0.3);
+                    const baseVal = p.map(flickerVal, 0, 1, 0, 255);
+                    const isGlitchingNow = (p as p5Types & { isGlitching: boolean }).isGlitching;
+                    const val = isGlitchingNow ? 255 - baseVal : baseVal;
+                    const index = 4 * (y * size + x);
+                    buffer.pixels[index] = val;
+                    buffer.pixels[index + 1] = val;
+                    buffer.pixels[index + 2] = val;
+                    buffer.pixels[index + 3] = 255;
+                  }
                 }
+                buffer.updatePixels();
+                p.image(buffer, cubeX, 0);
               }
-              buffer.updatePixels();
-              p.image(buffer, cubeX, 0);
-            }
+            };
           };
-        };
 
-        p5InstanceRef.current = new p5(noiseSketch, containerRef.current);
+          if (containerRef.current) {
+            p5InstanceRef.current = new P5(noiseSketch, containerRef.current);
+          }
+        });
       }
 
       return () => {
@@ -185,7 +205,7 @@ export default function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, [isGlitching]);
+    }, [isGlitching, p5Loaded]);
 
     useEffect(() => {
       if (p5InstanceRef.current) {
@@ -208,6 +228,8 @@ export default function VoidfulMaterials() {
 
   // **Responsive Design**: Adjusts canvas dimensions on window resize
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleResize = () => {
       const containerWidth =
         sketchRef.current?.clientWidth || window.innerWidth;
@@ -269,121 +291,128 @@ export default function VoidfulMaterials() {
 
   // **Neural Network Visualization**: p5.js sketch
   useEffect(() => {
-    if (!sketchRef.current) return;
+    if (!sketchRef.current || !p5Loaded || typeof window === "undefined") return;
 
-    const sketch = (p: p5Types) => {
-      let layers: p5Types.Vector[][] = [];
-      let connections: { start: p5Types.Vector; end: p5Types.Vector; offset: number }[] = [];
-      const neuronsPerLayer = [5, 5, 5, 5];
-      const inputLabels = ["Light", "EMF", "Heat", "Camera", "Geiger"];
-      const hiddenLayer1Labels = [
-        "Infrared Light 1",
-        "Infrared Light 2",
-        "Infrared Light 3",
-        "Infrared Light 4",
-        "Infrared Light 5",
-      ];
-      const hiddenLayer2Labels = [
-        "Voidful Energy 1",
-        "Voidful Energy 2",
-        "Voidful Energy 3",
-        "Voidful Energy 4",
-        "Voidful Energy 5",
-      ];
-      const outputLabels = ["Relic 1", "Relic 2", "Relic 3", "Relic 4", "Relic 5"];
-      const layerLabels = ["Input Layers", "Hidden Layer 1", "Hidden Layer 2"];
+    // Dynamic import to ensure p5 is loaded
+    import("p5").then((p5Module) => {
+      const P5 = p5Module.default;
 
-      p.setup = () => {
-        p.createCanvas(dimensions.width, dimensions.height);
-        resetSketch();
-      };
+      const sketch = (p: p5Types) => {
+        let layers: p5Types.Vector[][] = [];
+        let connections: { start: p5Types.Vector; end: p5Types.Vector; offset: number }[] = [];
+        const neuronsPerLayer = [5, 5, 5, 5];
+        const inputLabels = ["Light", "EMF", "Heat", "Camera", "Geiger"];
+        const hiddenLayer1Labels = [
+          "Infrared Light 1",
+          "Infrared Light 2",
+          "Infrared Light 3",
+          "Infrared Light 4",
+          "Infrared Light 5",
+        ];
+        const hiddenLayer2Labels = [
+          "Voidful Energy 1",
+          "Voidful Energy 2",
+          "Voidful Energy 3",
+          "Voidful Energy 4",
+          "Voidful Energy 5",
+        ];
+        const outputLabels = ["Relic 1", "Relic 2", "Relic 3", "Relic 4", "Relic 5"];
+        const layerLabels = ["Input Layers", "Hidden Layer 1", "Hidden Layer 2"];
 
-      const resetSketch = () => {
-        layers = [];
-        for (let i = 0; i < neuronsPerLayer.length; i++) {
-          const numNeurons = neuronsPerLayer[i];
-          const layer: p5Types.Vector[] = [];
-          const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
-          for (let j = 0; j < numNeurons; j++) {
-            const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
-            layer.push(p.createVector(x, y));
+        p.setup = () => {
+          p.createCanvas(dimensions.width, dimensions.height);
+          resetSketch();
+        };
+
+        const resetSketch = () => {
+          layers = [];
+          for (let i = 0; i < neuronsPerLayer.length; i++) {
+            const numNeurons = neuronsPerLayer[i];
+            const layer: p5Types.Vector[] = [];
+            const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
+            for (let j = 0; j < numNeurons; j++) {
+              const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
+              layer.push(p.createVector(x, y));
+            }
+            layers.push(layer);
           }
-          layers.push(layer);
-        }
 
-        connections = [];
-        for (let i = 0; i < layers.length - 1; i++) {
-          for (let j = 0; j < layers[i].length; j++) {
-            for (let k = 0; k < layers[i + 1].length; k++) {
-              const start = layers[i][j];
-              const end = layers[i + 1][k];
-              const offset = p.random(p.TWO_PI);
-              connections.push({ start, end, offset });
+          connections = [];
+          for (let i = 0; i < layers.length - 1; i++) {
+            for (let j = 0; j < layers[i].length; j++) {
+              for (let k = 0; k < layers[i + 1].length; k++) {
+                const start = layers[i][j];
+                const end = layers[i + 1][k];
+                const offset = p.random(p.TWO_PI);
+                connections.push({ start, end, offset });
+              }
             }
           }
-        }
-      };
+        };
 
-      p.draw = () => {
-        p.background(0);
-        p.stroke(200, 200, 200, 100);
-        p.strokeWeight(1);
-        for (const conn of connections) {
-          p.line(conn.start.x, conn.start.y, conn.end.x, conn.end.y);
-        }
-
-        p.noStroke();
-        p.fill(11, 255, 37);
-        const speed = p.TWO_PI / 300;
-        for (const conn of connections) {
-          const t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
-          const x = p.lerp(conn.start.x, conn.end.x, t);
-          const y = p.lerp(conn.start.y, conn.end.y, t);
-          p.ellipse(x, y, 4, 4);
-        }
-
-        p.textSize(14);
-        for (let i = 0; i < layers.length; i++) {
-          const layer = layers[i];
-          p.noStroke();
-          p.fill(255);
-          p.textAlign(p.CENTER, p.BOTTOM);
-          if (i < layerLabels.length) {
-            p.text(layerLabels[i], layer[0].x, 50);
-          } else {
-            p.text("Output", layer[0].x, 50);
+        p.draw = () => {
+          p.background(0);
+          p.stroke(200, 200, 200, 100);
+          p.strokeWeight(1);
+          for (const conn of connections) {
+            p.line(conn.start.x, conn.start.y, conn.end.x, conn.end.y);
           }
 
-          for (let j = 0; j < layer.length; j++) {
-            const pos = layer[j];
-            p.fill(85, 0, 255);
-            p.stroke(255);
-            p.ellipse(pos.x, pos.y, 27, 27);
+          p.noStroke();
+          p.fill(11, 255, 37);
+          const speed = p.TWO_PI / 300;
+          for (const conn of connections) {
+            const t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
+            const x = p.lerp(conn.start.x, conn.end.x, t);
+            const y = p.lerp(conn.start.y, conn.end.y, t);
+            p.ellipse(x, y, 4, 4);
+          }
+
+          p.textSize(14);
+          for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
             p.noStroke();
             p.fill(255);
-            p.textAlign(p.CENTER, p.CENTER);
-            if (i === 0 && j < inputLabels.length) {
-              p.text(inputLabels[j], pos.x, pos.y - 22);
-            } else if (i === 1 && j < hiddenLayer1Labels.length) {
-              p.text(hiddenLayer1Labels[j], pos.x, pos.y - 22);
-            } else if (i === 2 && j < hiddenLayer2Labels.length) {
-              p.text(hiddenLayer2Labels[j], pos.x, pos.y - 22);
-            } else if (i === 3 && j < outputLabels.length) {
-              p.text(outputLabels[j], pos.x, pos.y - 22);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            if (i < layerLabels.length) {
+              p.text(layerLabels[i], layer[0].x, 50);
+            } else {
+              p.text("Output", layer[0].x, 50);
+            }
+
+            for (let j = 0; j < layer.length; j++) {
+              const pos = layer[j];
+              p.fill(85, 0, 255);
+              p.stroke(255);
+              p.ellipse(pos.x, pos.y, 27, 27);
+              p.noStroke();
+              p.fill(255);
+              p.textAlign(p.CENTER, p.CENTER);
+              if (i === 0 && j < inputLabels.length) {
+                p.text(inputLabels[j], pos.x, pos.y - 22);
+              } else if (i === 1 && j < hiddenLayer1Labels.length) {
+                p.text(hiddenLayer1Labels[j], pos.x, pos.y - 22);
+              } else if (i === 2 && j < hiddenLayer2Labels.length) {
+                p.text(hiddenLayer2Labels[j], pos.x, pos.y - 22);
+              } else if (i === 3 && j < outputLabels.length) {
+                p.text(outputLabels[j], pos.x, pos.y - 22);
+              }
             }
           }
-        }
+        };
+
+        p.windowResized = () => {
+          p.resizeCanvas(dimensions.width, dimensions.height);
+          resetSketch();
+        };
       };
 
-      p.windowResized = () => {
-        p.resizeCanvas(dimensions.width, dimensions.height);
-        resetSketch();
-      };
-    };
-
-    const p5Instance = new p5(sketch, sketchRef.current);
-    return () => p5Instance.remove();
-  }, [dimensions]);
+      if (sketchRef.current) {
+        const p5Instance = new P5(sketch, sketchRef.current);
+        return () => p5Instance.remove();
+      }
+    });
+  }, [dimensions, p5Loaded]);
 
   // **Product Navigation Functions**
   const nextProduct = useCallback(() => {
@@ -403,6 +432,15 @@ export default function VoidfulMaterials() {
       setIsGlitching(false);
     }, 1000);
   }, [products.length]);
+
+  // Don't render p5 components until client-side
+  if (!p5Loaded) {
+    return (
+      <main className="relative w-full min-h-screen overflow-hidden text-white bg-black font-sans flex items-center justify-center">
+        <div>Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main
@@ -726,7 +764,7 @@ export default function VoidfulMaterials() {
           background: linear-gradient(
             45deg,
             rgba(255, 0, 0, 0.2),
-            rgba(0, 0, 255, 0.2)
+            rgba(0, 0, 255,0.2)
           );
           mix-blend-mode: overlay;
           animation: videoGlitch 0.1s steps(2) infinite;
@@ -810,3 +848,6 @@ export default function VoidfulMaterials() {
     </main>
   );
 }
+
+// Export with dynamic loading to prevent SSR
+export default dynamic(() => Promise.resolve(VoidfulMaterials), { ssr: false });
