@@ -17,7 +17,7 @@ export default function InfoWebsite() {
       {/* Main content overlay */}
       <div className="z-10 text-center px-4 mx-auto">
         <h1 className="text-6xl md:text-8xl font-bold tracking-tight glitch">
-          NORTEHEN ARTIFACTS : Voidful Materials - Relics
+         NORTHERN ARTIFACTS : Voidful Materials - Relics
         </h1>
         <span className="text-orange-500">E G R O J J J Ξξ Ξξ</span>
         <h2 className="mt-4 text-4xl md:text-6xl font-extrabold">

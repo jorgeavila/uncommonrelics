@@ -87,7 +87,7 @@ function VoidfulMaterials() {
       subtext:
         "A dimly lit lab-like space pulses with generative projections and reactive soundscapes.",
       videoSrc: "/Relic1b.mp4",
-      status: "SOLD OUT",
+      status: "AVIABLE",
     },
     {
       id: 1,
