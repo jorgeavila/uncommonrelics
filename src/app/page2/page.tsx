@@ -183,7 +183,7 @@ export default function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, []); // Empty dependency array since we only want to create the instance once
+    }, [isGlitching]); // Include isGlitching in dependency array
 
     useEffect(() => {
       if (p5InstanceRef.current) {
@@ -212,8 +212,8 @@ export default function VoidfulMaterials() {
       const baseWidth = 1080;
       const baseHeight = 720;
       const aspectRatio = baseWidth / baseHeight;
-      let newWidth = Math.min(containerWidth, baseWidth);
-      let newHeight = newWidth / aspectRatio;
+      const newWidth = Math.min(containerWidth, baseWidth);
+      const newHeight = newWidth / aspectRatio;
       setDimensions({ width: newWidth, height: newHeight });
     };
 
@@ -299,11 +299,11 @@ export default function VoidfulMaterials() {
       const resetSketch = () => {
         layers = [];
         for (let i = 0; i < neuronsPerLayer.length; i++) {
-          let numNeurons = neuronsPerLayer[i];
-          let layer = [];
-          let x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
+          const numNeurons = neuronsPerLayer[i];
+          const layer = [];
+          const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
           for (let j = 0; j < numNeurons; j++) {
-            let y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
+            const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
             layer.push(p.createVector(x, y));
           }
           layers.push(layer);
@@ -313,9 +313,9 @@ export default function VoidfulMaterials() {
         for (let i = 0; i < layers.length - 1; i++) {
           for (let j = 0; j < layers[i].length; j++) {
             for (let k = 0; k < layers[i + 1].length; k++) {
-              let start = layers[i][j];
-              let end = layers[i + 1][k];
-              let offset = p.random(p.TWO_PI);
+              const start = layers[i][j];
+              const end = layers[i + 1][k];
+              const offset = p.random(p.TWO_PI);
               connections.push({ start, end, offset });
             }
           }
@@ -326,23 +326,23 @@ export default function VoidfulMaterials() {
         p.background(0);
         p.stroke(200, 200, 200, 100);
         p.strokeWeight(1);
-        for (let conn of connections) {
+        for (const conn of connections) {
           p.line(conn.start.x, conn.start.y, conn.end.x, conn.end.y);
         }
 
         p.noStroke();
         p.fill(11, 255, 37);
-        let speed = p.TWO_PI / 300;
-        for (let conn of connections) {
-          let t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
-          let x = p.lerp(conn.start.x, conn.end.x, t);
-          let y = p.lerp(conn.start.y, conn.end.y, t);
+        const speed = p.TWO_PI / 300;
+        for (const conn of connections) {
+          const t = (p.sin(p.frameCount * speed + conn.offset) + 1) / 2;
+          const x = p.lerp(conn.start.x, conn.end.x, t);
+          const y = p.lerp(conn.start.y, conn.end.y, t);
           p.ellipse(x, y, 4, 4);
         }
 
         p.textSize(14);
         for (let i = 0; i < layers.length; i++) {
-          let layer = layers[i];
+          const layer = layers[i];
           p.noStroke();
           p.fill(255);
           p.textAlign(p.CENTER, p.BOTTOM);
@@ -353,7 +353,7 @@ export default function VoidfulMaterials() {
           }
 
           for (let j = 0; j < layer.length; j++) {
-            let pos = layer[j];
+            const pos = layer[j];
             p.fill(85, 0, 255);
             p.stroke(255);
             p.ellipse(pos.x, pos.y, 27, 27);
