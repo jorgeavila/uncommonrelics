@@ -87,7 +87,7 @@ function VoidfulMaterials() {
       subtext:
         "A dimly lit lab-like space pulses with generative projections and reactive soundscapes.",
       videoSrc: "/Relic1b.mp4",
-      status: "AVIABLE",
+      status: "SOLD OUT",
     },
     {
       id: 1,
@@ -202,7 +202,7 @@ function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, [isGlitching]); // Removed isClient from dependencies
+    }, [isGlitching]);
 
     useEffect(() => {
       if (p5InstanceRef.current) {
@@ -459,7 +459,7 @@ function VoidfulMaterials() {
       <nav className="sticky top-0 w-full flex justify-center items-center py-4 z-20 bg-black bg-opacity-80 backdrop-blur-sm">
         <div className="flex items-center space-x-6 md:space-x-10">
           <span className="cursor-pointer hover:opacity-80 text-sm md:text-base">
-            <AnimatedText text="UNCOMMON" />
+            <AnimatedText text="NORTHERN" />
           </span>
           <div className="w-10 h-10 md:w-12 md:h-12 border border-white-500 rounded-full flex items-center justify-center text-xs md:text-sm text-red-100">
             NA
@@ -512,6 +512,10 @@ function VoidfulMaterials() {
           <p className="text-xs md:text-sm lg:text-base opacity-90 mb-2">
             Hybrid physical-digital artifacts embody hyper-engineered materials.
           </p>
+          <div className="flex justify-center mb-4">
+            <NoiseCubes isGlitching={globalGlitch} className="h-16 mt-2 mb-2" />
+          </div>
+          {/* SEGUNDO GIF AGREGADO */}
           <div className="flex justify-center mb-4">
             <NoiseCubes isGlitching={globalGlitch} className="h-16 mt-2 mb-2" />
           </div>
@@ -637,6 +641,8 @@ function VoidfulMaterials() {
 
           {/* Right Side - Noise Cubes and Status */}
           <div className="lg:w-1/3 mt-10 lg:mt-0 lg:ml-10 flex flex-col items-center lg:items-start">
+            <NoiseCubes isGlitching={globalGlitch} className="h-16 mb-4 w-full" />
+            {/* SEGUNDO GIF AGREGADO */}
             <NoiseCubes isGlitching={globalGlitch} className="h-16 mb-4 w-full" />
             <p className="text-xs md:text-sm lg:text-base mb-6">
               Beauty as a trap.
