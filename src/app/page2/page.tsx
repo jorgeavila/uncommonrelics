@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import p5 from "p5";
+import type p5Types from "p5";
 import { motion, AnimatePresence } from "framer-motion";
 
 // **AnimatedText Component**: Progressively colors text letters red
@@ -112,11 +113,11 @@ export default function VoidfulMaterials() {
   // **NoiseCubes Component**: Integrated directly here
   const NoiseCubes = ({ isGlitching, className }: { isGlitching: boolean; className: string }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const p5InstanceRef = useRef<any>(null);
+    const p5InstanceRef = useRef<p5Types | null>(null);
 
     useEffect(() => {
       if (containerRef.current && !p5InstanceRef.current) {
-        const noiseSketch = (p: any) => {
+        const noiseSketch = (p: p5Types) => {
           const cubes = [
             { x: 0, y: 0, seed: p.random(1000), speed: 0.02, scale: 0.03 },
             { x: 0, y: 0, seed: p.random(1000), speed: 0.015, scale: 0.025 },
@@ -130,7 +131,7 @@ export default function VoidfulMaterials() {
             p.createCanvas(3 * size + 2 * spacing, size);
             p.noStroke();
             p.pixelDensity(1);
-            p.isGlitching = isGlitching;
+            (p as p5Types & { isGlitching: boolean }).isGlitching = isGlitching;
           };
 
           p.draw = () => {
@@ -160,7 +161,8 @@ export default function VoidfulMaterials() {
                   );
                   const flickerVal = noiseVal * (0.7 + flickerIntensity * 0.3);
                   const baseVal = p.map(flickerVal, 0, 1, 0, 255);
-                  const val = p.isGlitching ? 255 - baseVal : baseVal;
+                  const isGlitchingNow = (p as p5Types & { isGlitching: boolean }).isGlitching;
+                  const val = isGlitchingNow ? 255 - baseVal : baseVal;
                   const index = 4 * (y * size + x);
                   buffer.pixels[index] = val;
                   buffer.pixels[index + 1] = val;
@@ -183,11 +185,11 @@ export default function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, [isGlitching]); // Include isGlitching in dependency array
+    }, [isGlitching]);
 
     useEffect(() => {
       if (p5InstanceRef.current) {
-        p5InstanceRef.current.isGlitching = isGlitching;
+        (p5InstanceRef.current as p5Types & { isGlitching: boolean }).isGlitching = isGlitching;
       }
     }, [isGlitching]);
 
@@ -269,9 +271,9 @@ export default function VoidfulMaterials() {
   useEffect(() => {
     if (!sketchRef.current) return;
 
-    const sketch = (p: any) => {
-      let layers = [];
-      let connections = [];
+    const sketch = (p: p5Types) => {
+      let layers: p5Types.Vector[][] = [];
+      let connections: { start: p5Types.Vector; end: p5Types.Vector; offset: number }[] = [];
       const neuronsPerLayer = [5, 5, 5, 5];
       const inputLabels = ["Light", "EMF", "Heat", "Camera", "Geiger"];
       const hiddenLayer1Labels = [
@@ -300,7 +302,7 @@ export default function VoidfulMaterials() {
         layers = [];
         for (let i = 0; i < neuronsPerLayer.length; i++) {
           const numNeurons = neuronsPerLayer[i];
-          const layer = [];
+          const layer: p5Types.Vector[] = [];
           const x = p.map(i, 0, neuronsPerLayer.length - 1, 100, p.width - 100);
           for (let j = 0; j < numNeurons; j++) {
             const y = p.map(j, 0, numNeurons - 1, 100, p.height - 100);
