@@ -87,6 +87,7 @@ function VoidfulMaterials() {
       subtext:
         "A dimly lit lab-like space pulses with generative projections and reactive soundscapes.",
       videoSrc: "/Relic1b.mp4",
+      artifactSrc: "/artifact1.mp4",
       status: "SOLD OUT",
     },
     {
@@ -98,6 +99,7 @@ function VoidfulMaterials() {
       subtext:
         "Geometric anomalies emerge from electromagnetic field disturbances.",
       videoSrc: "/Relic2.mp4",
+      artifactSrc: "/artifact2.mp4",
       status: "AVAILABLE",
     },
     {
@@ -109,6 +111,7 @@ function VoidfulMaterials() {
       subtext:
         "Quantum entanglement visualized through reactive crystalline structures.",
       videoSrc: "/Relic3.mp4",
+      artifactSrc: "/artifact3.mp4",
       status: "COMING SOON",
     },
   ];
@@ -501,53 +504,34 @@ function VoidfulMaterials() {
       {/* Main Section */}
       <section className="relative flex flex-col items-center justify-center min-h-[40vh] px-4 md:px-8 z-10 pt-10 md:pt-20">
         <div className="text-center max-w-xl mx-auto">
-          <h1 className="text-base md:text-lg opacity-80 mb-1">EGROJJJ</h1>
+          <h1 className="text-base md:text-lg opacity-80 mb-1">{products[currentProduct].title}</h1>
           <h2
             className={`text-3xl md:text-5xl lg:text-6xl font-bold mb-3 ${
               globalGlitch ? "glitch" : ""
             }`}
           >
-            Voidful Materials - Relics I
+            {products[currentProduct].heading}
           </h2>
           <p className="text-xs md:text-sm lg:text-base opacity-90 mb-2">
-            Hybrid physical-digital artifacts embody hyper-engineered materials.
+            {products[currentProduct].description}
           </p>
-          <div className="flex justify-center mb-4">
-            <NoiseCubes isGlitching={globalGlitch} className="h-16 mt-2 mb-2" />
-          </div>
-          {/* SEGUNDO GIF AGREGADO */}
-          <div className="flex justify-center mb-4">
-            <NoiseCubes isGlitching={globalGlitch} className="h-16 mt-2 mb-2" />
-          </div>
           <p className="text-xs md:text-sm lg:text-base mb-4">
-            Beauty as a trap: Allure masks toxicity. Critique of innovation
-            without ethics.
+            {products[currentProduct].subtext}
           </p>
           <button className="border border-white px-4 md:px-6 py-1 md:py-2 text-xs md:text-sm uppercase transition-all hover:bg-white hover:text-black mx-auto">
-            SOLD OUT
+            {products[currentProduct].status}
           </button>
         </div>
       </section>
 
-      {/* Neural Network Visualization */}
-      <section className="w-full flex justify-center items-center px-4 mb-12 relative">
-        <div
-          ref={sketchRef}
-          className="w-full max-w-5xl h-auto"
-          style={{ height: `${dimensions.height}px` }}
-        />
-        {globalGlitch && (
-          <div className="absolute inset-0 glitch-overlay z-10"></div>
-        )}
-      </section>
-
       {/* Gallery Section with Glitchy Transitions */}
       <section className="relative min-h-screen px-4 md:px-8 z-10 py-12">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-16 items-start">
+          
           {/* Left Side - Product Info */}
-          <div className="lg:w-1/3 mb-10 lg:mb-0 lg:mr-10 text-left">
+          <div className="text-left">
             <h1 className="text-base md:text-lg opacity-80 mb-1">
-              {products[currentProduct].title}
+              EGROJJJ
             </h1>
             <motion.h2
               key={`heading-${currentProduct}`}
@@ -569,7 +553,7 @@ function VoidfulMaterials() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-xs md:text-sm lg:text-base mb-2 opacity-90"
             >
-              {products[currentProduct].description}
+              This relic simulate substances that seduce and corrupt—iridescent hydrogels that crystallize flesh, alloys emitting euphoric yet neurotoxic frequencies.
             </motion.p>
             <motion.p
               key={`subtext-${currentProduct}`}
@@ -579,7 +563,7 @@ function VoidfulMaterials() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="text-xs md:text-sm lg:text-base mb-6 opacity-80"
             >
-              {products[currentProduct].subtext}
+              ◐◉◑
             </motion.p>
 
             <div className="flex space-x-4 mt-6">
@@ -598,9 +582,51 @@ function VoidfulMaterials() {
             </div>
           </div>
 
-          {/* Center - Product Video */}
-          <div className="lg:w-1/3 flex flex-col items-center">
-            <div className="w-[300px] h-[300px] bg-gray-900 overflow-hidden relative">
+          {/* Center - 3D Artifact Video */}
+          <div>
+            <div className="relative w-full lg:w-[640px] pb-[56.25%] bg-gray-800 overflow-hidden mb-8">
+              <div
+                className={`absolute inset-0 z-10 ${
+                  isGlitching || globalGlitch ? "glitch-overlay" : "opacity-0"
+                }`}
+              ></div>
+
+              <AnimatePresence mode="wait">
+                <motion.video
+                  key={`artifact-${currentProduct}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  width="1080"
+                  height="720"
+                  className={`absolute top-0 left-0 w-full h-full object-cover ${
+                    isGlitching || globalGlitch ? "glitch-video" : ""
+                  }`}
+                >
+                  <source src={products[currentProduct].artifactSrc} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </motion.video>
+              </AnimatePresence>
+
+              <div className="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-2 text-xs">
+                3D Artifact Visualization
+              </div>
+            </div>
+
+            {/* GIF debajo del 3D Artifact */}
+            <div className="flex justify-center mb-4">
+              <NoiseCubes isGlitching={globalGlitch} className="h-16" />
+            </div>
+          </div>
+
+          {/* Right Side - Product Video */}
+          <div>
+            <div className="relative w-[300px] h-[300px] bg-gray-800 overflow-hidden mb-8">
               <div
                 className={`absolute inset-0 z-10 ${
                   isGlitching || globalGlitch ? "glitch-overlay" : "opacity-0"
@@ -618,12 +644,12 @@ function VoidfulMaterials() {
                 >
                   <video
                     ref={productVideoRef}
-                    width="300"
-                    height="300"
                     autoPlay
                     muted
                     loop
                     playsInline
+                    width="1080"
+                    height="720"
                     className={`object-cover w-full h-full absolute top-0 left-0 ${
                       isGlitching || globalGlitch ? "glitch-video" : ""
                     }`}
@@ -637,18 +663,18 @@ function VoidfulMaterials() {
                 </motion.div>
               </AnimatePresence>
             </div>
-          </div>
 
-          {/* Right Side - Noise Cubes and Status */}
-          <div className="lg:w-1/3 mt-10 lg:mt-0 lg:ml-10 flex flex-col items-center lg:items-start">
-            <NoiseCubes isGlitching={globalGlitch} className="h-16 mb-4 w-full" />
-            {/* SEGUNDO GIF AGREGADO */}
-            <NoiseCubes isGlitching={globalGlitch} className="h-16 mb-4 w-full" />
+            {/* GIF debajo del producto */}
+            <div className="flex justify-center mb-4">
+              <NoiseCubes isGlitching={globalGlitch} className="h-16" />
+            </div>
+
             <p className="text-xs md:text-sm lg:text-base mb-6">
               Beauty as a trap.
             </p>
+            
             <button
-              className={`border border-white px-4 md:px-6 py-1 md:py-2 text-xs md:text-sm uppercase transition-all hover:bg-white hover:text-black mt-4 ${
+              className={`border border-white px-4 md:px-6 py-1 md:py-2 text-xs md:text-sm uppercase transition-all hover:bg-white hover:text-black ${
                 products[currentProduct].status === "SOLD OUT"
                   ? "opacity-50 cursor-not-allowed"
                   : ""
@@ -656,27 +682,18 @@ function VoidfulMaterials() {
             >
               {products[currentProduct].status}
             </button>
-
-            {/* Product Navigation Dots */}
-            <div className="flex space-x-2 mt-8">
-              {products.map((product, index) => (
-                <button
-                  key={product.id}
-                  className={`w-3 h-3 rounded-full ${
-                    currentProduct === index ? "bg-white" : "bg-gray-600"
-                  }`}
-                  onClick={() => {
-                    setIsGlitching(true);
-                    setTimeout(() => {
-                      setCurrentProduct(index);
-                      setIsGlitching(false);
-                    }, 1000);
-                  }}
-                />
-              ))}
-            </div>
           </div>
         </div>
+
+        {/* Neural Network Visualization Below Gallery */}
+        <section className="my-0 flex justify-center">
+          <div className="w-full" style={{ maxWidth: "800px", height: "600px" }}>
+            <div
+              ref={sketchRef}
+              style={{ width: "100%", maxWidth: "800px", height: "600px" }}
+            />
+          </div>
+        </section>
       </section>
 
       {/* Color Wheel Section */}
