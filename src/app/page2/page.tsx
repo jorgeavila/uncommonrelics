@@ -4,9 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Dynamically import p5 with no SSR
-const p5 = dynamic(() => import("p5"), { ssr: false });
-
 // Type import for p5
 import type p5Types from "p5";
 
@@ -78,7 +75,7 @@ function VoidfulMaterials() {
   const [currentProduct, setCurrentProduct] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
   const productVideoRef = useRef<HTMLVideoElement>(null);
-  const [p5Loaded, setP5Loaded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const products = [
     {
@@ -118,7 +115,7 @@ function VoidfulMaterials() {
 
   // Check if we're in the browser
   useEffect(() => {
-    setP5Loaded(true);
+    setIsClient(true);
   }, []);
 
   // **NoiseCubes Component**: Integrated directly here
@@ -127,7 +124,7 @@ function VoidfulMaterials() {
     const p5InstanceRef = useRef<p5Types | null>(null);
 
     useEffect(() => {
-      if (!p5Loaded || typeof window === "undefined") return;
+      if (!isClient || typeof window === "undefined") return;
 
       if (containerRef.current && !p5InstanceRef.current) {
         // Dynamic import to ensure p5 is loaded
@@ -205,7 +202,7 @@ function VoidfulMaterials() {
           p5InstanceRef.current = null;
         }
       };
-    }, [isGlitching, p5Loaded]);
+    }, [isGlitching]); // Removed isClient from dependencies
 
     useEffect(() => {
       if (p5InstanceRef.current) {
@@ -291,7 +288,9 @@ function VoidfulMaterials() {
 
   // **Neural Network Visualization**: p5.js sketch
   useEffect(() => {
-    if (!sketchRef.current || !p5Loaded || typeof window === "undefined") return;
+    if (!sketchRef.current || !isClient || typeof window === "undefined") return;
+
+    let p5Instance: p5Types | null = null;
 
     // Dynamic import to ensure p5 is loaded
     import("p5").then((p5Module) => {
@@ -408,11 +407,16 @@ function VoidfulMaterials() {
       };
 
       if (sketchRef.current) {
-        const p5Instance = new P5(sketch, sketchRef.current);
-        return () => p5Instance.remove();
+        p5Instance = new P5(sketch, sketchRef.current);
       }
     });
-  }, [dimensions, p5Loaded]);
+
+    return () => {
+      if (p5Instance) {
+        p5Instance.remove();
+      }
+    };
+  }, [dimensions, isClient]);
 
   // **Product Navigation Functions**
   const nextProduct = useCallback(() => {
@@ -434,7 +438,7 @@ function VoidfulMaterials() {
   }, [products.length]);
 
   // Don't render p5 components until client-side
-  if (!p5Loaded) {
+  if (!isClient) {
     return (
       <main className="relative w-full min-h-screen overflow-hidden text-white bg-black font-sans flex items-center justify-center">
         <div>Loading...</div>
@@ -764,7 +768,7 @@ function VoidfulMaterials() {
           background: linear-gradient(
             45deg,
             rgba(255, 0, 0, 0.2),
-            rgba(0, 0, 255,0.2)
+            rgba(0, 0, 255, 0.2)
           );
           mix-blend-mode: overlay;
           animation: videoGlitch 0.1s steps(2) infinite;
