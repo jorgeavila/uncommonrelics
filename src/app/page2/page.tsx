@@ -5,7 +5,7 @@ import p5 from "p5";
 import { motion, AnimatePresence } from "framer-motion";
 
 // **AnimatedText Component**: Progressively colors text letters red
-const AnimatedText = ({ text }) => {
+const AnimatedText = ({ text }: { text: string }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
 
@@ -63,15 +63,15 @@ const VHSOverlay = () => {
 
 // **Main Component**: VoidfulMaterials with NoiseCubes integrated
 export default function VoidfulMaterials() {
-  const sketchRef = useRef();
+  const sketchRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1080, height: 720 });
-  const videoRef1 = useRef(null);
-  const videoRef2 = useRef(null);
+  const videoRef1 = useRef<HTMLVideoElement>(null);
+  const videoRef2 = useRef<HTMLVideoElement>(null);
   const [activeVideo, setActiveVideo] = useState(1);
   const [globalGlitch, setGlobalGlitch] = useState(false);
   const [currentProduct, setCurrentProduct] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
-  const productVideoRef = useRef(null);
+  const productVideoRef = useRef<HTMLVideoElement>(null);
 
   const products = [
     {
@@ -110,13 +110,13 @@ export default function VoidfulMaterials() {
   ];
 
   // **NoiseCubes Component**: Integrated directly here
-  const NoiseCubes = ({ isGlitching, className }) => {
-    const containerRef = useRef(null);
-    const p5InstanceRef = useRef(null);
+  const NoiseCubes = ({ isGlitching, className }: { isGlitching: boolean; className: string }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const p5InstanceRef = useRef<any>(null);
 
     useEffect(() => {
       if (containerRef.current && !p5InstanceRef.current) {
-        const noiseSketch = (p) => {
+        const noiseSketch = (p: any) => {
           const cubes = [
             { x: 0, y: 0, seed: p.random(1000), speed: 0.02, scale: 0.03 },
             { x: 0, y: 0, seed: p.random(1000), speed: 0.015, scale: 0.025 },
@@ -269,7 +269,7 @@ export default function VoidfulMaterials() {
   useEffect(() => {
     if (!sketchRef.current) return;
 
-    const sketch = (p) => {
+    const sketch = (p: any) => {
       let layers = [];
       let connections = [];
       const neuronsPerLayer = [5, 5, 5, 5];
